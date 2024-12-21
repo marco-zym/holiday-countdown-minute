@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>节日倒计时</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, button {
+            margin-bottom: 10px;
+        }
+        .countdown {
+            padding: 10px;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        .countdown button {
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>节日倒计时</h1>
+    <form id="festivalForm">
+        <label for="festivalName">节日名称:</label>
+        <input type="text" id="festivalName" required>
+
+        <label for="festivalDate">节日日期和时间:</label>
+        <input type="datetime-local" id="festivalDate" required>
+
+        <button type="submit">添加节日</button>
+    </form>
+
+    <div id="countdownList"></div>
+
+    <script>
+        const form = document.getElementById('festivalForm');
+        const countdownList = document.getElementById('countdownList');
+
+        // 从LocalStorage加载节日
+        function loadFestivals() {
+            const festivals = JSON.parse(localStorage.getItem('festivals')) || [];
+            countdownList.innerHTML = '';
+            festivals.forEach((festival, index) => {
+                addFestivalToDOM(festival, index);
+            });
+        }
+
+        // 将节日添加到DOM
+        function addFestivalToDOM(festival, index) {
+            const festivalDiv = document.createElement('div');
+            festivalDiv.className = 'countdown';
+
+            const now = new Date();
+            const targetDate = new Date(festival.date);
+            const diffTime = targetDate - now;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            const diffMinutes = Math.ceil(diffTime / (1000 * 60));
+
+            festivalDiv.innerHTML = `
+                距离 <strong>${festival.name}</strong> 还有 <strong>${diffDays}</strong> 天（<strong>${diffMinutes}</strong> 分钟）
+                <button onclick="deleteFestival(${index})">删除</button>
+            `;
+
+            countdownList.appendChild(festivalDiv);
+        }
+
+        // 添加节日
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const name = document.getElementById('festivalName').value;
+            const date = document.getElementById('festivalDate').value;
+
+            if (!name || !date) {
+                alert('请填写完整的节日名称和日期！');
+                return;
+            }
+
+            const festivals = JSON.parse(localStorage.getItem('festivals')) || [];
+            festivals.push({ name, date });
+            localStorage.setItem('festivals', JSON.stringify(festivals));
+
+            form.reset();
+            loadFestivals();
+        });
+
+        // 删除节日
+        function deleteFestival(index) {
+            const festivals = JSON.parse(localStorage.getItem('festivals')) || [];
+            festivals.splice(index, 1);
+            localStorage.setItem('festivals', JSON.stringify(festivals));
+            loadFestivals();
+        }
+
+        // 页面加载时初始化
+        window.onload = loadFestivals;
+    </script>
+</body>
+</html>
